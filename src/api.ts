@@ -1,42 +1,84 @@
-// Obtenemos la URL base desde las variables de entorno de Vite.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const IP_BASE = import.meta.env.VITE_IP_BASE;
+const PUERTO = import.meta.env.VITE_PUERTO;
+const TIEMPO_ESPERA_MS = parseInt(import.meta.env.VITE_TIEMPO_ESPERA_MS); 
 
 interface ApiResponse {
 	success: boolean;
 	message: string;
+	status?: number; // Código HTTP opcional
 }
 
 /**
- * Envía una alerta al ESP32.
- * @param lastOctet - El último octeto de la dirección IP.
+ * Función genérica para manejar peticiones HTTP con Timeout.
+ * @param endpoint - Ruta del servidor (ej: '/alert', '/message')
+ * @param options - Opciones de fetch (method, headers, body, etc.)
+ * @returns Promesa que resuelve a un objeto ApiResponse.
  */
-export async function sendAlert(lastOctet: string): Promise<ApiResponse> {
+async function fetchWithTimeout(url: string,endpoint: string, options: RequestInit = {}): Promise<ApiResponse> {
+	const controller = new AbortController();
+	// Configura el temporizador de aborto
+	const timeoutId = setTimeout(() => controller.abort(), TIEMPO_ESPERA_MS);
+
 	try {
-		const response = await fetch(`${API_BASE_URL}.${lastOctet}/alert`, {
-			method: 'POST',
-			// Puedes agregar headers si tu API los requiere
-			// headers: { 'Content-Type': 'application/json' },
+		const response = await fetch(`${url}${endpoint}`, {
+			...options,
+			signal: controller.signal,
 		});
 
-		if (!response.ok) {
-			return { success: false, message: `Error de red: ${response.statusText}` };
+		// Limpia el temporizador si la respuesta llega a tiempo
+		clearTimeout(timeoutId);
+
+		if (response.ok) {
+			// Asume que el servidor devuelve un cuerpo de texto en caso de éxito
+			const text = await response.text();
+			return {
+				success: true,
+				message: text || `✅ Solicitud exitosa para ${endpoint}.`,
+			};
 		}
-		return { success: true, message: '✅ ¡Alerta enviada con éxito!' };
+
+		// Manejo de errores HTTP (4xx, 5xx)
+		const errorBody = await response.text();
+		throw new Error(`❌ HTTP Error ${response.status} en ${endpoint}: ${errorBody || response.statusText}`);
 	} catch (error) {
-		console.error('Error al enviar alerta:', error);
-		return { success: false, message: '❗ No se pudo conectar con el dispositivo.' };
+		// Limpia el temporizador ante cualquier error
+		clearTimeout(timeoutId);
+
+		// Manejo del error de AbortController (Timeout)
+		if (error instanceof Error && error.name === 'AbortError') {
+			return {
+				success: false,
+				message: `⌛ Tiempo de espera agotado (${TIEMPO_ESPERA_MS / 1000}s). El servidor no respondió.`,
+				status: 408, // Código HTTP para Request Timeout
+			};
+		}
+
+		// Manejo de otros errores de red (CORS, servidor no disponible)
+		console.error('Error durante la petición:', error);
+		return {
+			success: false,
+			message: `🚫 Error de red: El servidor no está disponible o hay un problema de CORS/Conexión.`,
+			status: 0,
+		};
 	}
 }
 
-/**
- * Envía un mensaje al ESP32.
- * @param lastOctet - El último octeto de la dirección IP.
- * @param message - El mensaje a enviar.
- */
-export async function sendMessage(lastOctet: string, message: string): Promise<ApiResponse> {
-	// La implementación sería muy similar a sendAlert,
-	// probablemente cambiando el endpoint y enviando el mensaje en el cuerpo.
-	console.log(`Enviando mensaje "${message}" a ${API_BASE_URL}.${lastOctet}`);
-	// Simulación de éxito
-	return Promise.resolve({ success: true, message: '✅ ¡Mensaje enviado!' });
+// --- FUNCIONES ESPECÍFICAS DE ENDPOINT ---
+
+export async function sendMessage(lastOctet: string, mensaje: string): Promise<ApiResponse> {
+	const fullUrl = `http://${IP_BASE}${lastOctet}:${PUERTO}`;
+	return fetchWithTimeout(fullUrl, '/message', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'text/plain',
+		},
+		body: mensaje,
+	});
+}
+
+export async function sendAlert(lastOctet: string): Promise<ApiResponse> {
+	const fullUrl = `http://${IP_BASE}${lastOctet}:${PUERTO}`;
+	return fetchWithTimeout(fullUrl, '/alert', {
+		method: 'GET',
+	});
 }
