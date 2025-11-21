@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es" class="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Notifier UI</title>
+  <script type="module" src="/src/main.ts"></script>
+</head>
+
+<body
+  class="bg-red-600 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300 p-4">
+
+  <div id="main-container" class="max-w-lg mx-auto">
+
+    <header class="flex justify-between items-center mb-8">
+      <h1 class="text-3xl font-extrabold">Panel de Comandos</h1>
+      <button id="theme-toggle"
+        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+        ☀️
+      </button>
+    </header>
+
+    <section class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl shadow-lg mb-6 transition-colors duration-300">
+      <h2 class="text-xl font-semibold mb-3">Enviar Alerta de Alarma</h2>
+      <button id="alert-button" type="button" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-md hover:shadow-lg
+                       disabled:opacity-50">
+        Disparar Alerta
+      </button>
+      <p id="alert-status" class="mt-3 text-sm text-gray-500 dark:text-gray-400 text-center"></p>
+    </section>
+
+    <section class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl shadow-lg transition-colors duration-300">
+      <h2 class="text-xl font-semibold mb-3">Enviar Mensaje de Notificación</h2>
+      <input type="text" id="message-input" placeholder="Escriba el mensaje..." class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg mb-4 
+                      bg-white dark:bg-gray-700 dark:text-gray-200 
+                      focus:ring-blue-500 focus:border-blue-500 transition">
+      <button id="message-button" type="button" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-md hover:shadow-lg
+                       disabled:opacity-50">
+        Enviar Mensaje
+      </button>
+    </section>
+
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
+  </div>
+
+</body>
+
+</html>
