@@ -142,7 +142,7 @@ const rawData: string[][] = [
 		'',
 		'192.168.15.57',
 		'b4:29:3d:86:9c:b3',
-	],S
+	],
 ];
 
 // Función para transformar los datos a un formato de objeto más utilizable
