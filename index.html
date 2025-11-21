@@ -15,11 +15,21 @@
 
     <header class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-extrabold">Panel de Comandos</h1>
-      <button id="theme-toggle"
-        class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition">
-        ☀️
-      </button>
     </header>
+
+    <section class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl shadow-lg mb-6 transition-colors duration-300">
+      <h2 class="text-xl font-semibold mb-3">⚙️ Configuración del Dispositivo</h2>
+      <div class="flex items-center space-x-2">
+        <label for="ip-input" class="text-gray-600 dark:text-gray-300 font-mono">192.168.15.</label>
+    
+        <input type="number" id="ip-input" placeholder="" value="" min="1" max="254" class="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg 
+                       bg-white dark:bg-gray-700 dark:text-gray-200 
+                       focus:ring-blue-500 focus:border-blue-500 text-center transition">
+    
+        <span class="text-gray-600 dark:text-gray-300 font-mono">:3000</span>
+      </div>
+      <p id="ip-error" class="mt-2 text-sm text-red-500"></p>
+    </section>
 
     <section class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl shadow-lg mb-6 transition-colors duration-300">
       <h2 class="text-xl font-semibold mb-3">Enviar Alerta de Alarma</h2>

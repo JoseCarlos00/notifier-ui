@@ -1,108 +1,146 @@
-// import './style.css';
 import './main.tw.css';
-// import { sentAlert, sendMessage } from './api'; // Asumiendo que crea un archivo de API
+import { sendAlert, sendMessage } from './api'; // Asumiendo que crea un archivo de API
 
-// 1. Referenciar Elementos del DOM (¡Usando TypeScript!)
 const alertButton = document.querySelector<HTMLButtonElement>('#alert-button');
 const messageButton = document.querySelector<HTMLButtonElement>('#message-button');
 const messageInput = document.querySelector<HTMLInputElement>('#message-input');
 const alertStatus = document.querySelector<HTMLParagraphElement>('#alert-status');
 
-// 2. Lógica de Eventos
-if (alertButton && alertStatus) {
-	alertButton.addEventListener('click', () => {
-		// Implementar la lógica de envío, timeout y rate limit aquí
-		console.log('Se hizo click en Alerta');
-		// Ejemplo: sendAlert();
-	});
+const ipInput = document.querySelector<HTMLInputElement>('#ip-input');
+const ipError = document.querySelector<HTMLParagraphElement>('#ip-error');
+
+function getLastOctet(): string | null {
+	if (!ipInput || !ipError) return null;
+
+	const value = ipInput.value.trim();
+	const num = parseInt(value);
+
+	// Validación: debe ser un número entero entre 1 y 254
+	if (isNaN(num) || num < 1 || num > 254 || value.includes('.')) {
+		ipError.textContent = '❗ IP inválida. Debe ser un número entre 1 y 254.';
+		return null;
+	}
+
+	ipError.textContent = ''; // Limpiar errores
+	return value;
 }
 
-if (messageButton && messageInput) {
-	messageButton.addEventListener('click', () => {
-		const message = messageInput.value.trim();
-		if (message.length > 0) {
-			// Implementar la lógica de envío aquí
-			console.log('Mensaje a enviar:', message);
-			// Ejemplo: sendMessage(message);
+const ALERT_COOLDOWN_SECONDS = 10;
+let isAlertCoolingDown = false; // Bandera para controlar el rate limit
+
+/**
+ * Muestra un mensaje de estado en el elemento de la alerta.
+ * @param message - El mensaje a mostrar.
+ * @param type - 'success', 'error', 'info', o 'loading'.
+ */
+function updateAlertStatus(message: string, type: 'success' | 'error' | 'info' | 'loading' = 'info') {
+    if (!alertStatus) return;
+
+    alertStatus.className = 'mt-3 text-sm text-center transition-colors duration-200';
+
+    if (type === 'success') {
+        alertStatus.classList.add('text-green-600', 'dark:text-green-400');
+    } else if (type === 'error') {
+        alertStatus.classList.add('text-red-600', 'dark:text-red-400', 'font-bold');
+    } else if (type === 'loading') {
+        alertStatus.classList.add('text-blue-600', 'dark:text-blue-400');
+        // Aquí podría agregar un spinner si quisiera
+    } else { // info
+        alertStatus.classList.add('text-gray-500', 'dark:text-gray-400');
+    }
+    alertStatus.textContent = message;
+}
+
+// --- FUNCIÓN PRINCIPAL DE ALERTA ---
+
+async function handleSendAlert() {
+	if (!alertButton || isAlertCoolingDown) return;
+
+	// Obtener el último octeto
+	const lastOctet = getLastOctet();
+	if (!lastOctet) return; // Detener si la IP no es válida
+
+	isAlertCoolingDown = true;
+	alertButton.disabled = true;
+
+	// Muestra estado de carga
+	updateAlertStatus('⏳ Enviando alerta...', 'loading');
+
+	try {
+		const result = await sendAlert(lastOctet);
+
+		if (result.success) {
+			updateAlertStatus(result.message, 'success');
 		} else {
-			// Mostrar error de validación
-			console.error('El mensaje no puede estar vacío.');
+			// Muestra el mensaje de error de la API (incluye Timeout y errores de red)
+			updateAlertStatus(result.message, 'error');
 		}
-	});
-}
-
-// 3. (Opcional) Inicialización o más lógica de componentes...
-// main.ts
-
-// --- 1. Lógica de Persistencia del Modo Oscuro ---
-
-const htmlElement = document.documentElement; // Es el elemento <html>
-const toggleButton = document.querySelector<HTMLButtonElement>('#theme-toggle');
-
-/**
- * Aplica el tema guardado en localStorage o el modo preferido del sistema.
- */
-function applyTheme() {
-	// Prioridad 1: Comprobar si hay un tema guardado explícitamente por el usuario.
-	const savedTheme = localStorage.getItem('theme');
-	if (savedTheme === 'light') {
-		htmlElement.classList.remove('dark');
-		updateToggleButton('☀️');
-		return; // Salimos para no aplicar más lógica
+	} catch (e) {
+		// En caso de un error inesperado en la llamada a sendAlert
+		updateAlertStatus('❗ Error interno al procesar la solicitud.', 'error');
 	}
-	if (savedTheme === 'dark') {
-		htmlElement.classList.add('dark');
-		updateToggleButton('🌙');
-		return; // Salimos
+
+	let timeRemaining = ALERT_COOLDOWN_SECONDS;
+	const interval = setInterval(() => {
+		timeRemaining -= 1;
+		if (timeRemaining > 0) {
+			// Muestra la cuenta regresiva en el botón
+			alertButton.textContent = `Reintentar en (${timeRemaining}s)`;
+		} else {
+			clearInterval(interval);
+			isAlertCoolingDown = false;
+			alertButton.disabled = false;
+			alertButton.textContent = 'Disparar Alerta'; // Texto original
+			updateAlertStatus('Listo para una nueva alerta.', 'info');
+		}
+	}, 1000);
+}
+
+
+// --- FUNCIÓN PRINCIPAL DE MENSAJE ---
+
+async function handleSendMessage() {
+	if (!messageInput || !messageButton) return;
+
+	const message = messageInput.value.trim();
+	if (message.length === 0) {
+		updateAlertStatus('El mensaje no puede estar vacío.', 'error');
+		return;
 	}
-	// Prioridad 2: Si no hay nada guardado, respetar la clase inicial del HTML o la preferencia del sistema.
-	if (htmlElement.classList.contains('dark')) {
-		updateToggleButton('🌙'); // El HTML ya está en modo oscuro, solo actualizamos el botón.
-	} else {
-        htmlElement.classList.remove('dark');
-        updateToggleButton('☀️'); // Actualiza el icono a sol
-    }
+
+	// Obtener el último octeto
+	const lastOctet = getLastOctet();
+	if (!lastOctet) return; // Detener si la IP no es válida
+
+	messageButton.disabled = true;
+	const originalText = messageButton.textContent;
+	messageButton.textContent = 'Enviando...';
+	updateAlertStatus('⏳ Enviando mensaje...', 'loading');
+
+	try {
+		const result = await sendMessage(lastOctet, message);
+
+		if (result.success) {
+			updateAlertStatus(result.message, 'success');
+			messageInput.value = ''; // Limpiar el input al éxito
+		} else {
+			updateAlertStatus(result.message, 'error');
+		}
+	} catch (e) {
+		updateAlertStatus('❗ Error interno al procesar el mensaje.', 'error');
+	} finally {
+		messageButton.disabled = false;
+		messageButton.textContent = originalText;
+	}
 }
 
-/**
- * Actualiza el icono del botón para reflejar el modo actual.
- */
-function updateToggleButton(icon: string) {
-    if (toggleButton) {
-        toggleButton.textContent = icon;
-        toggleButton.setAttribute('aria-label', icon === '☀️' ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro');
-    }
+
+// --- ASIGNACIÓN DE EVENTOS ---
+if (alertButton) {
+    alertButton.addEventListener('click', handleSendAlert);
+    updateAlertStatus('Listo para enviar la alerta.', 'info'); // Estado inicial
 }
 
-/**
- * Alterna entre modo claro y oscuro.
- */
-function toggleTheme() {
-  console.log('toggle Theme');
-  
-    if (htmlElement.classList.contains('dark')) {
-        // Cambiar a claro
-        htmlElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        updateToggleButton('☀️');
-    } else {
-        // Cambiar a oscuro
-        htmlElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        updateToggleButton('🌙');
-    }
+if (messageButton) {
+    messageButton.addEventListener('click', handleSendMessage);
 }
-
-// --- 2. Inicialización y Event Listeners ---
-
-// Aplica el tema tan pronto como se carga el script
-applyTheme(); 
-
-// Asigna el evento al botón de alternancia
-if (toggleButton) {
-    toggleButton.addEventListener('click', toggleTheme);
-}
-
-// --- 3. (Aquí iría su lógica de Alerta y Mensaje, como en el ejemplo anterior) ---
-// const alertButton = document.querySelector<HTMLButtonElement>('#alert-button');
-// ... el resto de su código de la aplicación
