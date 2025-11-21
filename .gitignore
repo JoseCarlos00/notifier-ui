@@ -1,6 +1,10 @@
 # Logs
 logs
 *.log
+
+# Local Environment Variables
+.env*.local
+
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
