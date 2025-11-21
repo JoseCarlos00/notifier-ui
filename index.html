@@ -5,7 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Notifier UI</title>
-  <script type="module" src="/src/main.ts"></script>
+  <script type="module" src="./src/main.ts"></script>
+  <!-- <script type="module" src="/src/aut.ts"></script> -->
 </head>
 
 <body
@@ -52,8 +53,38 @@
     </section>
 
     <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
+
+    
+    <!--Add buttons to initiate auth sequence and sign out-->
+    <!-- <button id="authorize_button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Authorize</button> -->
+    <!-- <button id="signout_button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg">Sign Out</button> -->
+    
+    <!-- <pre id="content" style="white-space: pre-wrap;"></pre> -->
   </div>
 
+  <!-- <script>
+
+      /**
+         * Callback after api.js is loaded.
+         */
+        function gapiLoaded() {
+          console.log('gapiLoaded 0');
+          window.localStorage.setItem('gapiLoaded', 'true')
+        }
+
+       /**
+        * Callback after Google Identity Services are loaded.
+        */
+        function gisLoaded() {
+          console.log('gisLoaded 0');
+          window.localStorage.setItem('gisLoaded', 'true')
+        }
+  </script>
+
+  <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+  <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
+  <script type="module" src="./src/aut.ts"></script> -->
+  
 </body>
 
 </html>
