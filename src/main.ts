@@ -147,7 +147,7 @@ async function handleSendMessage() {
 
 const recortarTexto = (texto: string, limite: number) => {
 	if (!texto) return '';
-	
+
   return texto.length > limite
     ? texto.substring(0, limite) + "..."
     : texto;
@@ -188,13 +188,14 @@ function handleAutocompleteSearch() {
 			'p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition flex justify-between items-center';
 		resultItem.dataset.ip = device.ip;
 
-		// const resultDefaultUser = `<p class="font-semibold">${device.usuario ||device.aliasUsuario || 'N/A'}</p>`
-		const resultDefaultUser = `<p class="font-semibold">Default User</p>`
+		const resultDefaultUser = `<p class="font-semibold">${device.usuario ||device.aliasUsuario || 'N/A'}</p>`
 		const marianoResult = device.usuario + " - " + recortarTexto(device.aliasUsuario, 14)
+
+		const userSelected = /^mariano\d+/.test(device.usuario.toLowerCase()) ? marianoResult : resultDefaultUser
 		
 		resultItem.innerHTML = `
             <div>
-                ${/^mariano\d+/.test(device.usuario.toLowerCase()) ? marianoResult : resultDefaultUser}
+                ${userSelected}
                 <p class="text-xs text-gray-500 dark:text-gray-400">${device.equipo} | ${device.ip}</p>
             </div>
         `;
