@@ -22,13 +22,33 @@
       <h2 class="text-xl font-semibold mb-3">⚙️ Configuración del Dispositivo</h2>
       <div class="flex items-center space-x-2">
         <label for="ip-input" class="text-gray-600 dark:text-gray-300 font-mono">192.168.15.</label>
-    
+
         <input type="number" id="ip-input" placeholder="" value="" min="1" max="254" class="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg 
                        bg-white dark:bg-gray-700 dark:text-gray-200 
                        focus:ring-blue-500 focus:border-blue-500 text-center transition">
-    
+
         <span class="text-gray-600 dark:text-gray-300 font-mono">:3000</span>
       </div>
+      <p id="ip-error" class="mt-2 text-sm text-red-500"></p>
+    </section>
+
+    <section class="bg-gray-50 dark:bg-gray-800 p-5 rounded-xl shadow-lg mb-6 transition-colors duration-300">
+      <h2 class="text-xl font-semibold mb-3">🔍 Seleccionar Dispositivo Objetivo</h2>
+
+      <div class="relative">
+        <input type="search" id="search-input" placeholder="Buscar por Usuario o Equipo (FM00002)..."
+          class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                     bg-white dark:bg-gray-700 dark:text-gray-200 focus:ring-blue-500 focus:border-blue-500 transition mb-4" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+        <div id="autocomplete-results" class="absolute z-10 w-full mt-[-1rem] bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-b-lg shadow-xl 
+                      max-h-60 overflow-y-auto hidden">
+        </div>
+      </div>
+
+      <div id="device-details" class="mt-4 p-3 bg-white dark:bg-gray-700 rounded-lg border dark:border-gray-600">
+        <p class="text-gray-500 dark:text-gray-400">Seleccione un dispositivo para ver los detalles.</p>
+      </div>
+
       <p id="ip-error" class="mt-2 text-sm text-red-500"></p>
     </section>
 
@@ -54,11 +74,11 @@
 
     <div id="toast-container" class="fixed bottom-4 right-4 z-50"></div>
 
-    
+
     <!--Add buttons to initiate auth sequence and sign out-->
     <!-- <button id="authorize_button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg">Authorize</button> -->
     <!-- <button id="signout_button" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg">Sign Out</button> -->
-    
+
     <!-- <pre id="content" style="white-space: pre-wrap;"></pre> -->
   </div>
 
@@ -84,7 +104,7 @@
   <script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
   <script async defer src="https://accounts.google.com/gsi/client" onload="gisLoaded()"></script>
   <script type="module" src="./src/aut.ts"></script> -->
-  
+
 </body>
 
 </html>
